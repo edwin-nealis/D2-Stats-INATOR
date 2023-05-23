@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "D2-Stats-INATOR",
+    "description": "Base Level Extension",
+    "version": "1.0",
+    "action": {
+      "default_popup": "/views/home.html",
+      "default_icon": "/public/images/D2SI-mainIcon.jpg"
+    },
+  
+    "permissions": [
+      "storage",
+      "tabs",
+      "activeTab",
+      "scripting",
+      "webRequest"
+    ],
+
+  
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"], 
+        "js": ["content.js"],
+        "run_at": "document_idle"
+      }
+    ]
+    
+  }
