@@ -1,0 +1,11 @@
+/*Variables*/
+:root {
+    --black: #0000;
+    --white: #fff;
+    --blue: #1d0857;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
