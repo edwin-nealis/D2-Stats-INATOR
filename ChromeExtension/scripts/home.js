@@ -11,6 +11,27 @@ function clear() {
     document.getElementById("display").innerHTML = "";
 }
 
+// document.getElementById("logIn").addEventListener('click', function() {
+//     chrome.identity.getAuthToken({interactive: true}, function(token) {
+//         let init = {
+//             method: 'GET',
+//             async: true,
+//             headers: {
+//                 Authrization: 'Bearer ' + token,
+//                 'Content-Type': 'application/json'
+//             },
+//             'contentType': 'json'
+//         };
+//         fetch(
+//             'https://www.bungie.net/en/OAuth/Authorize?client_id=41255&response_type=code', init)
+//             .then((response) => response.json())
+//             .then(function(data) {
+//                 console.log(data)
+//             });
+//     });
+// });
+
+
 document.getElementById("submit").addEventListener('click', function () {
     clear();
     document.getElementById("submit").classList.toggle('noDisplay');

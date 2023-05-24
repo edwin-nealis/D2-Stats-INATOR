@@ -13,7 +13,8 @@
       "tabs",
       "activeTab",
       "scripting",
-      "webRequest"
+      "webRequest",
+      "identity"
     ],
 
   
@@ -23,6 +24,11 @@
         "js": ["content.js"],
         "run_at": "document_idle"
       }
-    ]
+    ],
+    "oauth2": {
+      "client_id": "41255",
+      "scopes":["https://www.bungie.net/en/OAuth/Authorize"]
+    },
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkdqq7/JFDUoRRTbYYruiHBJ9n4K1FIXqn6ojx+fg6f6FVwn69S+CMUj66wryVviUFbDXBfQBrz3+xW1DRHlyquAYkChIP38rAWtp1t7n6dbEfW1Assib+QMDHo5aCpOhDIbPOfJ5vEne1aE09nxoajSdlPkyVUSmz6YkOPKjJZ83/vG5DvSkKs1aHP0nXgpZPUmvlcIQGH3mM9tQzUcDCeAFBF01TQGtscuppE5iKix5S41qNYFJUO6l/i2jegDcSuobuwh22NbCBuRZd6bAd1f+J746c/EFyIXx7Hp2GOiwfbKC9EiDJl7cW+HiS+CefL4E/ji6cNBDpR50NVnW9QIDAQAB"
     
   }
