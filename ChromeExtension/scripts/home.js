@@ -6,9 +6,13 @@ function displayHome(home) {
     kd.textContent = "PvP kill death ratio: " + json.Response.mergedAllCharacters.results.allPvP.allTime.killsDeathsRatio.basic.displayValue;
     home.appendChild(kd);
 }
+//delets all HTML inside of the display div
+function clear() {
+    document.getElementById("display").innerHTML = "";
+}
 
 document.getElementById("submit").addEventListener('click', function () {
-
+    clear();
     document.getElementById("submit").classList.toggle('noDisplay');
     document.getElementById("load").classList.toggle('noDisplay');
     var xhr = new XMLHttpRequest();
