@@ -8,6 +8,9 @@ function displayHome(home) {
 }
 
 document.getElementById("submit").addEventListener('click', function () {
+
+    document.getElementById("submit").classList.toggle('noDisplay');
+    document.getElementById("load").classList.toggle('noDisplay');
     var xhr = new XMLHttpRequest();
     let name = document.getElementById("bngId").value;
     xhr.open("POST", "https://www.bungie.net/platform/User/Search/GlobalName/0/", true);
@@ -37,7 +40,8 @@ document.getElementById("submit").addEventListener('click', function () {
                             let home = document.getElementById("display");
                             if (home !== null) { // display info for home page
                                 displayHome(home);
-
+                                document.getElementById("load").classList.toggle('noDisplay');
+                                document.getElementById("submit").classList.toggle('noDisplay');
                             }
                         }
                     }
