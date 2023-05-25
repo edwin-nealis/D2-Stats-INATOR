@@ -1,5 +1,7 @@
-var apiKey = "c89e72284bc84b759fb941779ae84a3f";
+
 var json;
+var maifest =chrome.runtime.getManifest();
+var apiKey = maifest.api_key;
 function displayHome(home) {
     let kd = document.createElement('p');
     kd.setAttribute('class', 'api');
@@ -30,6 +32,7 @@ function clear() {
 //             });
 //     });
 // });
+var xhr = new XMLHttpRequest();
 
 
 document.getElementById("submit").addEventListener('click', function () {
