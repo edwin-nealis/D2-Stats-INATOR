@@ -32,7 +32,7 @@ function clear() {
 //             });
 //     });
 // });
-var xhr = new XMLHttpRequest();
+
 
 
 document.getElementById("submit").addEventListener('click', function () {
