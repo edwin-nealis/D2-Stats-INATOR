@@ -28,7 +28,7 @@ window.onload = function() {
                 response.json().then(obj => {
                 let json = {};
                 json['token'] = JSON.stringify(obj.access_token);
-                console.log(obj.access_token);
+                console.log(obj);
                 chrome.storage.local.set(json, function() {
                     window.location.href = "afterLogIn.html";
                    //this saves the access token to local storage should proably be deleted at some point after api call 
