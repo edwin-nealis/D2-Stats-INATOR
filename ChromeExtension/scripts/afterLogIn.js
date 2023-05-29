@@ -95,13 +95,12 @@ function getActivityIds() {
                             console.log(lastInSession);
                             if(lastInSession === activities.length - 1) {
                                 await getActivityHistory(null, charId1, ++pages).then(json => {
-                                activities.concat(json)
+                                    activities.concat(json)
                                });
                             } else {
                                 gotAllOfSession = true;
                                 activities.splice(lastInSession + 1);
                             }
-                            break;
                             }
 
                             console.log(activities);
