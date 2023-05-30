@@ -41,8 +41,36 @@ window.onload = function () {
             charId2 = chars[1].characterId;
             charId3 = chars[2].characterId;
         }
-        await getActivityIds(null, charId3);
+        await getActivityIds(null, charId2);
         console.log(session);
+        var games = [];
+
+        for (let i = 0; i < session.length; i++) {
+            await getPostGameReport(session[i].activityDetails.referenceId).then(json => {
+                games[i] = json;
+            });
+
+        }
+
+
+    });
+}
+function getPostGameReport(activityId) {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://www.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/" + activityId, true);
+        xhr.setRequestHeader("X-API-Key", apiKey);
+        xhr.setRequestHeader("Authorization", "Bearer " + token);
+        xhr.onreadystatechange = function () {
+            if (this.status === 200) {
+                let json = JSON.parse(this.responseText);
+                resolve(json);
+            } else {
+                reject(this.status);
+            }
+
+        };
+        xhr.send();
     });
 }
 function getUser() {
