@@ -54,16 +54,53 @@ window.onload = function () {
         }
         console.log(games);
         let teamMates = [];
+        let enemys = [];
         let player = [];
+
         for (let i = 0; i < games.length; i++) {
-            for (let j = 0; j < games[i].Response.entries.length; j++) {
-                if (games[i].Response.entries[j].characterId === charId1) {
-                    player.push(games[i].Response.entries[j]);
+            let team1 = new Array();
+            let team2 = new Array();
+            let team1Name = games[i].Response.teams[0].teamId;
+            let isPlayerTeam1 = null;
+            for (let ii = 0; ii < games[i].Response.entries.length; ii++) {
+                if (games[i].Response.entries[ii].values.team.basic.value === team1Name) {
+                    if (games[i].Response.entries[ii].characterId === charId1) {
+                        player.push(games[i].Response.entries[ii]);
+                        isPlayerTeam1 = true;
+                    } else {
+                        team1.push(games[i].Response.entries[ii]);
+                    }
                 } else {
-                    teamMates.push(games[i].Response.entries[j]);
+                    if (games[i].Response.entries[ii].characterId === charId1) {
+                        player.push(games[i].Response.entries[ii]);
+                        isPlayerTeam1 = false;
+                    } else {
+                        team2.push(games[i].Response.entries[ii]);
+                    }
                 }
             }
+            if (i === 0) {
+                if (isPlayerTeam1) {
+                    teamMates = team1;
+                    enemys = team2;
+                } else {
+                    teamMates = team2;
+                    enemys = team1;
+                }
+            } else {
+                if (isPlayerTeam1) {
+                    teamMates.concat(team1);
+                    enemys.concat(team2);
+                } else {
+                    teamMates.concat(team2);
+                    enemys.concat(team1);
+                }
+            }
+            console.log(teamMates);
+            console.log(enemys);
+
         }
+        makePieGraph(enemys, "enemysChart", "Enemys");
         makePieGraph(teamMates, "teamMatesChart", "teamMates");
         makePieGraph(player, "playerChart", "players");
 
@@ -92,7 +129,7 @@ function makePieGraph(players, chart, title) {
             weaponKills += players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value;
         }
     }
-    let yValues = [weaponKills/allKills, grenadeKills/allKills, meleeKills/allKills, superKills/allKills]
+    let yValues = [weaponKills / allKills, grenadeKills / allKills, meleeKills / allKills, superKills / allKills]
 
     new Chart(chart, {
         type: "pie",
