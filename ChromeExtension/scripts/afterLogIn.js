@@ -107,19 +107,42 @@ window.onload = function () {
     });
 }
 
-function makePieGraph(players, chart, title) {
-    let xValues = ["Weapon", "Grenade", "Melee", "Super"];
+async function makePieGraph(players, chart, title) {
+    let xValues = ["primay", "special", "Heavy", "Grenade", "Melee", "Super"];
     let allKills = 0;
     let weaponKills = 0;
     let grenadeKills = 0;
     let meleeKills = 0;
     let superKills = 0;
+    let primaryKills = 0;
+    let specialKills = 0;
+    let heavyKills = 0;
+    let itemTypeDisplayName = [];
+    let promises = [];
     var barColors = [
         "#b91d47",
         "#00aba9",
         "#2b5797",
         "#e8c3b9"
     ]
+    for (let i = 0; i < players.length; i++) {
+        for (let j = 0; j < players[i].extended.weapons.length; j++) {
+            promises.push(getItem(players[i].extended.weapons[j].referenceId, players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value));        
+        }
+    }
+    let data = await Promise.all(promises);
+    data.forEach(weapon => {
+        console.log(weapon.Response.equippingBlock.ammoType);
+        if (weapon.Response.equippingBlock.ammoType === 1) {
+            primaryKills += weapon.kills;
+        } else if (weapon.Response.equippingBlock.ammoType === 2) {
+            specialKills += weapon.kills;
+        } else {
+            heavyKills += weapon.Kills;
+        }
+        itemTypeDisplayName.push(weapon.Response.itemTypeDisplayName);
+    });
+
     for (let i = 0; i < players.length; i++) {
         allKills += players[i].values.kills.basic.value;
         grenadeKills += players[i].extended.values.weaponKillsGrenade.basic.value;
@@ -129,7 +152,7 @@ function makePieGraph(players, chart, title) {
             weaponKills += players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value;
         }
     }
-    let yValues = [weaponKills / allKills, grenadeKills / allKills, meleeKills / allKills, superKills / allKills]
+    let yValues = [primaryKills/ weaponKills, specialKills/ weaponKills, heavyKills/ weaponKills,  grenadeKills / allKills, meleeKills / allKills, superKills / allKills]
 
     new Chart(chart, {
         type: "pie",
@@ -149,10 +172,31 @@ function makePieGraph(players, chart, title) {
     });
 
 }
+//ammoType 1=primary 2=special 3=heavy 4=relic(maybe)
+function getItem(id, kills) {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://www.bungie.net/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/" + id, true);
+        xhr.setRequestHeader("X-API-Key", apiKey);
+        xhr.setRequestHeader("Authorization", "Bearer " + token);
+        xhr.onreadystatechange = function () {
+            if (this.status === 200) {
+                let json = JSON.parse(this.responseText);
+                json.kills = kills;
+                console.log(json)
+                resolve(json);
+            } else {
+                reject(this.status);
+            }
+
+        };
+        xhr.send();
+    });
+}
 function getPostGameReport(activityId) {
     return new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
-        xhr.open("GET", "https://www.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/" + activityId, true);
+        xhr.open("GET", "https://www.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/" + activityId +'?definitions=true', true);
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
         xhr.onreadystatechange = function () {
