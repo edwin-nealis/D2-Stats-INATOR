@@ -1,3 +1,4 @@
+
 var manifest = chrome.runtime.getManifest();
 var apiKey = manifest.api_key;
 var memberShipId = "";
@@ -41,19 +42,75 @@ window.onload = function () {
             charId2 = chars[1].characterId;
             charId3 = chars[2].characterId;
         }
-        await getActivityIds(null, charId2);
+        await getActivityIds(null, charId1);
         console.log(session);
         var games = [];
 
         for (let i = 0; i < session.length; i++) {
-            await getPostGameReport(session[i].activityDetails.referenceId).then(json => {
+            await getPostGameReport(session[i].activityDetails.instanceId).then(json => {
                 games[i] = json;
             });
 
         }
-
+        console.log(games);
+        let teamMates = [];
+        let player = [];
+        for (let i = 0; i < games.length; i++) {
+            for (let j = 0; j < games[i].Response.entries.length; j++) {
+                if (games[i].Response.entries[j].characterId === charId1) {
+                    player.push(games[i].Response.entries[j]);
+                } else {
+                    teamMates.push(games[i].Response.entries[j]);
+                }
+            }
+        }
+        makePieGraph(teamMates, "teamMatesChart", "teamMates");
+        makePieGraph(player, "playerChart", "players");
 
     });
+}
+
+function makePieGraph(players, chart, title) {
+    let xValues = ["Weapon", "Grenade", "Melee", "Super"];
+    let allKills = 0;
+    let weaponKills = 0;
+    let grenadeKills = 0;
+    let meleeKills = 0;
+    let superKills = 0;
+    var barColors = [
+        "#b91d47",
+        "#00aba9",
+        "#2b5797",
+        "#e8c3b9"
+    ]
+    for (let i = 0; i < players.length; i++) {
+        allKills += players[i].values.kills.basic.value;
+        grenadeKills += players[i].extended.values.weaponKillsGrenade.basic.value;
+        meleeKills += players[i].extended.values.weaponKillsMelee.basic.value;
+        superKills += players[i].extended.values.weaponKillsSuper.basic.value;
+        for (let j = 0; j < players[i].extended.weapons.length; j++) {
+            weaponKills += players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value;
+        }
+    }
+    let yValues = [weaponKills/allKills, grenadeKills/allKills, meleeKills/allKills, superKills/allKills]
+
+    new Chart(chart, {
+        type: "pie",
+        data: {
+            labels: xValues,
+            datasets: [{
+                backgroundColor: barColors,
+                data: yValues
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: title,
+            }
+        }
+    });
+
 }
 function getPostGameReport(activityId) {
     return new Promise((resolve, reject) => {
