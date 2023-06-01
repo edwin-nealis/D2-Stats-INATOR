@@ -92,11 +92,11 @@ window.onload = function () {
                 }
             } else {
                 if (isPlayerTeam1) {
-                    teamMates.concat(team1);
-                    enemys.concat(team2);
+                    teamMates = teamMates.concat(team1);
+                    enemys = enemys.concat(team2);
                 } else {
-                    teamMates.concat(team2);
-                    enemys.concat(team1);
+                    teamMates = teamMates.concat(team2);
+                    enemys = enemys.concat(team1);
                 }
             }
             console.log(selectedId);
