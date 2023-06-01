@@ -6,6 +6,7 @@ var membershipType;
 var charId1 = null;
 var charId2 = null;
 var charId3 = null;
+var selectedId;
 var token = null;
 var session;
 window.onload = function () {
@@ -42,7 +43,9 @@ window.onload = function () {
             charId2 = chars[1].characterId;
             charId3 = chars[2].characterId;
         }
-        await getActivityIds(null, charId1);
+        //character id used in all calls
+        selectedId = charId1;
+        await getActivityIds(73, selectedId);
         console.log(session);
         var games = [];
 
@@ -64,14 +67,14 @@ window.onload = function () {
             let isPlayerTeam1 = null;
             for (let ii = 0; ii < games[i].Response.entries.length; ii++) {
                 if (games[i].Response.entries[ii].values.team.basic.value === team1Name) {
-                    if (games[i].Response.entries[ii].characterId === charId1) {
+                    if (games[i].Response.entries[ii].characterId === selectedId) {
                         player.push(games[i].Response.entries[ii]);
                         isPlayerTeam1 = true;
                     } else {
                         team1.push(games[i].Response.entries[ii]);
                     }
                 } else {
-                    if (games[i].Response.entries[ii].characterId === charId1) {
+                    if (games[i].Response.entries[ii].characterId === selectedId) {
                         player.push(games[i].Response.entries[ii]);
                         isPlayerTeam1 = false;
                     } else {
@@ -96,6 +99,7 @@ window.onload = function () {
                     enemys.concat(team1);
                 }
             }
+            console.log(selectedId);
             console.log(teamMates);
             console.log(enemys);
 
@@ -119,6 +123,7 @@ async function makePieGraph(players, chart, title) {
     let heavyKills = 0;
     let itemTypeDisplayName = [];
     let promises = [];
+    let quit = 0;
     var barColors = [
         "#b91d47",
         "#00aba9",
@@ -126,13 +131,14 @@ async function makePieGraph(players, chart, title) {
         "#e8c3b9"
     ]
     for (let i = 0; i < players.length; i++) {
-        for (let j = 0; j < players[i].extended.weapons.length; j++) {
-            promises.push(getItem(players[i].extended.weapons[j].referenceId, players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value));        
+        if (players[i].extended.hasOwnProperty('weapons')) {
+            for (let j = 0; j < players[i].extended.weapons.length; j++) {
+                promises.push(getItem(players[i].extended.weapons[j].referenceId, players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value));
+            }
         }
     }
     let data = await Promise.all(promises);
     data.forEach(weapon => {
-        console.log(weapon.Response.equippingBlock.ammoType);
         if (weapon.Response.equippingBlock.ammoType === 1) {
             primaryKills += weapon.kills;
         } else if (weapon.Response.equippingBlock.ammoType === 2) {
@@ -144,15 +150,24 @@ async function makePieGraph(players, chart, title) {
     });
 
     for (let i = 0; i < players.length; i++) {
-        allKills += players[i].values.kills.basic.value;
-        grenadeKills += players[i].extended.values.weaponKillsGrenade.basic.value;
-        meleeKills += players[i].extended.values.weaponKillsMelee.basic.value;
-        superKills += players[i].extended.values.weaponKillsSuper.basic.value;
-        for (let j = 0; j < players[i].extended.weapons.length; j++) {
-            weaponKills += players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value;
+        if (players[i].extended.hasOwnProperty('weapons')) {
+            allKills += players[i].values.kills.basic.value;
+            grenadeKills += players[i].extended.values.weaponKillsGrenade.basic.value;
+            meleeKills += players[i].extended.values.weaponKillsMelee.basic.value;
+            superKills += players[i].extended.values.weaponKillsSuper.basic.value;
+            if(players[i].values.completed.basic.value === 0) {
+                quit++;
+            }
+            for (let j = 0; j < players[i].extended.weapons.length; j++) {
+                weaponKills += players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value;
+            }
         }
     }
-    let yValues = [primaryKills/ weaponKills, specialKills/ weaponKills, heavyKills/ weaponKills,  grenadeKills / allKills, meleeKills / allKills, superKills / allKills]
+    let p =  document.createElement('p');
+    p.textContent = quit + " " + title;
+    let display = document.querySelector('#display');
+    display.append(p);
+    let yValues = [primaryKills / weaponKills, specialKills / weaponKills, heavyKills / weaponKills, grenadeKills / allKills, meleeKills / allKills, superKills / allKills]
 
     new Chart(chart, {
         type: "pie",
@@ -183,7 +198,6 @@ function getItem(id, kills) {
             if (this.status === 200) {
                 let json = JSON.parse(this.responseText);
                 json.kills = kills;
-                console.log(json)
                 resolve(json);
             } else {
                 reject(this.status);
@@ -196,7 +210,7 @@ function getItem(id, kills) {
 function getPostGameReport(activityId) {
     return new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
-        xhr.open("GET", "https://www.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/" + activityId +'?definitions=true', true);
+        xhr.open("GET", "https://www.bungie.net/Platform/Destiny2/Stats/PostGameCarnageReport/" + activityId + '?definitions=true', true);
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
         xhr.onreadystatechange = function () {
