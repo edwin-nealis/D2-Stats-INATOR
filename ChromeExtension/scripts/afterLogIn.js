@@ -44,8 +44,8 @@ window.onload = function () {
             charId3 = chars[2].characterId;
         }
         //character id used in all calls
-        selectedId = charId1;
-        await getActivityIds(73, selectedId);
+        selectedId = charId3;
+        await getActivityIds(5, selectedId);
         console.log(session);
         var games = [];
 
@@ -104,6 +104,9 @@ window.onload = function () {
             console.log(enemys);
 
         }
+        let p2 = document.createElement('p');
+        p2.textContent = "Games in Session: " + session.length;
+        displayDiv.append(p2);
         makePieGraph(enemys, "enemysChart", "Enemys");
         makePieGraph(teamMates, "teamMatesChart", "teamMates");
         makePieGraph(player, "playerChart", "players");
@@ -112,7 +115,7 @@ window.onload = function () {
 }
 
 async function makePieGraph(players, chart, title) {
-    let xValues = ["primay", "special", "Heavy", "Grenade", "Melee", "Super"];
+    let xValues = ["primay", "special", "Heavy", "Grenade", "Melee", "Super", "Other Abilities"];
     let allKills = 0;
     let weaponKills = 0;
     let grenadeKills = 0;
@@ -121,6 +124,7 @@ async function makePieGraph(players, chart, title) {
     let primaryKills = 0;
     let specialKills = 0;
     let heavyKills = 0;
+    let otherAbilities = 0;
     let itemTypeDisplayName = [];
     let promises = [];
     let quit = 0;
@@ -128,7 +132,9 @@ async function makePieGraph(players, chart, title) {
         "#b91d47",
         "#00aba9",
         "#2b5797",
-        "#e8c3b9"
+        "#e8c3b9",
+        "#000000",
+        "#973273"
     ]
     for (let i = 0; i < players.length; i++) {
         if (players[i].extended.hasOwnProperty('weapons')) {
@@ -143,8 +149,8 @@ async function makePieGraph(players, chart, title) {
             primaryKills += weapon.kills;
         } else if (weapon.Response.equippingBlock.ammoType === 2) {
             specialKills += weapon.kills;
-        } else {
-            heavyKills += weapon.Kills;
+        } else if (weapon.Response.equippingBlock.ammoType === 3) {
+            heavyKills += weapon.kills;
         }
         itemTypeDisplayName.push(weapon.Response.itemTypeDisplayName);
     });
@@ -155,6 +161,7 @@ async function makePieGraph(players, chart, title) {
             grenadeKills += players[i].extended.values.weaponKillsGrenade.basic.value;
             meleeKills += players[i].extended.values.weaponKillsMelee.basic.value;
             superKills += players[i].extended.values.weaponKillsSuper.basic.value;
+            otherAbilities += players[i].extended.values.weaponKillsAbility.basic.value;
             if(players[i].values.completed.basic.value === 0) {
                 quit++;
             }
@@ -167,7 +174,7 @@ async function makePieGraph(players, chart, title) {
     p.textContent = quit + " " + title;
     let display = document.querySelector('#display');
     display.append(p);
-    let yValues = [primaryKills / weaponKills, specialKills / weaponKills, heavyKills / weaponKills, grenadeKills / allKills, meleeKills / allKills, superKills / allKills]
+    let yValues = [primaryKills / allKills, specialKills / allKills, heavyKills / allKills, grenadeKills / allKills, meleeKills / allKills, superKills / allKills, otherAbilities/allKills]
 
     new Chart(chart, {
         type: "pie",
