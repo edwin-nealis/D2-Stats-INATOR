@@ -99,9 +99,6 @@ window.onload = function () {
                     enemys = enemys.concat(team1);
                 }
             }
-            console.log(selectedId);
-            console.log(teamMates);
-            console.log(enemys);
 
         }
         let p2 = document.createElement('p');
@@ -162,7 +159,7 @@ async function makePieGraph(players, chart, title) {
             meleeKills += players[i].extended.values.weaponKillsMelee.basic.value;
             superKills += players[i].extended.values.weaponKillsSuper.basic.value;
             otherAbilities += players[i].extended.values.weaponKillsAbility.basic.value;
-            if(players[i].values.completed.basic.value === 0) {
+            if (players[i].values.completed.basic.value === 0) {
                 quit++;
             }
             for (let j = 0; j < players[i].extended.weapons.length; j++) {
@@ -170,11 +167,11 @@ async function makePieGraph(players, chart, title) {
             }
         }
     }
-    let p =  document.createElement('p');
-    p.textContent = quit + " " + title;
+    let p = document.createElement('p');
+    p.textContent = quit + " " + title + "did not finish";
     let display = document.querySelector('#display');
     display.append(p);
-    let yValues = [primaryKills / allKills, specialKills / allKills, heavyKills / allKills, grenadeKills / allKills, meleeKills / allKills, superKills / allKills, otherAbilities/allKills]
+    let yValues = [primaryKills / allKills, specialKills / allKills, heavyKills / allKills, grenadeKills / allKills, meleeKills / allKills, superKills / allKills, otherAbilities / allKills]
 
     new Chart(chart, {
         type: "pie",
@@ -202,11 +199,11 @@ function getItem(id, kills) {
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
         xhr.onreadystatechange = function () {
-            if (this.status === 200) {
+            if (this.readyState === 4 && this.status === 200) {
                 let json = JSON.parse(this.responseText);
                 json.kills = kills;
                 resolve(json);
-            } else {
+            } else if(this.readyState === 4) {
                 reject(this.status);
             }
 
@@ -221,10 +218,10 @@ function getPostGameReport(activityId) {
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
         xhr.onreadystatechange = function () {
-            if (this.status === 200) {
+            if (this.readyState === 4 && this.status === 200) {
                 let json = JSON.parse(this.responseText);
                 resolve(json);
-            } else {
+            } else if(this.readyState === 4) {
                 reject(this.status);
             }
 
@@ -239,10 +236,10 @@ function getUser() {
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
         xhr.onreadystatechange = function () {
-            if (this.status === 200) {
+            if (this.readyState === 4 && this.status === 200) {
                 let json = JSON.parse(this.responseText);
                 resolve(json);
-            } else {
+            } else if(this.readyState === 4) {
                 reject(this.status);
             }
 
@@ -256,10 +253,10 @@ function getUserProfile() {
         xhr2.open("GET", 'https://www.bungie.net/platform/User/GetMembershipsById/' + memberShipId + '/254/', true);
         xhr2.setRequestHeader("X-API-Key", apiKey);
         xhr2.onreadystatechange = async function () {
-            if (this.status === 200) {
+            if (this.readyState === 4 && this.status === 200) {
                 let json = JSON.parse(this.responseText);
                 resolve(json);
-            } else {
+            } else if(this.readyState === 4) {
                 reject(this.status)
             }
 
@@ -274,17 +271,17 @@ function getAccount() {
         xhr.open("GET", 'https://www.bungie.net/platform/Destiny2/' + membershipType + '/Account/' + memberShipId + '/Stats/', true);
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.onreadystatechange = function () {
-            if (this.status === 200) {
-                let json = JSON.parse(this.responseText);
-                resolve(json);
-            } else {
-                reject(this.status);
-            }
+                if (this.readyState === 4 && this.status === 200) {
+                    let json = JSON.parse(this.responseText);
+                    resolve(json);
+                } else if(this.readyState === 4) {
+                    reject(this.status);
+                }
         };
         xhr.send();
     });
 }
-
+//this always returns 2 matches even if the secound match is outside the time threshold 
 async function getActivityIds(mode, character) {
     let activities;
     await getActivityHistory(mode, character, 0)
@@ -299,7 +296,6 @@ async function getActivityIds(mode, character) {
                 for (; i < activities.length; i++) {
                     let thisDate = new Date(activities[i].period);
                     let lastDatePluse2Hours = lastDate.getTime() - 7200000;
-                    console.log(thisDate.getTime() + "    " + lastDatePluse2Hours);
                     if (thisDate.getTime() >= lastDatePluse2Hours) {
                         lastInSession = i;
                     } else {
@@ -335,12 +331,13 @@ function getActivityHistory(mode, charId, page) {
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
         xhr.onreadystatechange = function () {
-            if (this.status === 200) {
-                let json = JSON.parse(this.responseText);
-                resolve(json);
-            } else {
-                reject(this.status);
-            }
+                if (this.readyState === 4 && this.status === 200) {
+                    let json = JSON.parse(this.responseText);
+                    resolve(json);
+                } else if(this.readyState === 4) {
+                    reject(this.status);
+                    console.log("regected");
+                }
         };
         xhr.send();
     });
