@@ -9,6 +9,7 @@ var charId3 = null;
 var selectedId;
 var token = null;
 var session;
+var selectedMode;
 window.onload = function () {
     let displayDiv = document.getElementById('display');
     chrome.storage.local.get(['token'], async function (item) {
@@ -20,8 +21,6 @@ window.onload = function () {
         let p = document.createElement('p');
         console.log(userJson);
         memberShipId = userJson.Response.membershipId;
-        p.textContent = "Been playing this game for this fucking long " + userJson.Response.firstAccess;
-        displayDiv.append(p);
         let profileJson;
         await getUserProfile().then(json => {
             profileJson = json;
@@ -45,7 +44,8 @@ window.onload = function () {
         }
         //character id used in all calls
         selectedId = charId3;
-        await getActivityIds(5, selectedId);
+        selectedMode = 5
+        await getActivityIds(selectedMode, selectedId);
         console.log(session);
         var games = [];
 
@@ -103,15 +103,16 @@ window.onload = function () {
         }
         let p2 = document.createElement('p');
         p2.textContent = "Games in Session: " + session.length;
-        displayDiv.append(p2);
-        makePieGraph(enemys, "enemysChart", "Enemys");
-        makePieGraph(teamMates, "teamMatesChart", "teamMates");
-        makePieGraph(player, "playerChart", "players");
+        let div = document.querySelector('#top');
+        div.append(p2);
+        makePieGraph(enemys, session.length, "enemysChart", "Enemys", selectedMode);
+        makePieGraph(teamMates, session.length, "teamMatesChart", "teamMates", selectedMode);
+        makePieGraph(player, session.length, "playerChart", "players", selectedMode);
 
     });
 }
 
-async function makePieGraph(players, chart, title) {
+async function makePieGraph(players, games, chart, title, mode) {
     let xValues = ["primay", "special", "Heavy", "Grenade", "Melee", "Super", "Other Abilities"];
     let allKills = 0;
     let weaponKills = 0;
@@ -122,6 +123,10 @@ async function makePieGraph(players, chart, title) {
     let specialKills = 0;
     let heavyKills = 0;
     let otherAbilities = 0;
+    let kd = 0;
+    let kda = 0;
+    let overAllKd = 0;
+    let overAllKda = 0;
     let itemTypeDisplayName = [];
     let promises = [];
     let quit = 0;
@@ -135,6 +140,7 @@ async function makePieGraph(players, chart, title) {
     ]
     for (let i = 0; i < players.length; i++) {
         if (players[i].extended.hasOwnProperty('weapons')) {
+            promises.push(getKd(players[i].characterId, players[i].player.destinyUserInfo.membershipId, players[i].player.destinyUserInfo.membershipType, mode));
             for (let j = 0; j < players[i].extended.weapons.length; j++) {
                 promises.push(getItem(players[i].extended.weapons[j].referenceId, players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value));
             }
@@ -142,14 +148,19 @@ async function makePieGraph(players, chart, title) {
     }
     let data = await Promise.all(promises);
     data.forEach(weapon => {
-        if (weapon.Response.equippingBlock.ammoType === 1) {
-            primaryKills += weapon.kills;
-        } else if (weapon.Response.equippingBlock.ammoType === 2) {
-            specialKills += weapon.kills;
-        } else if (weapon.Response.equippingBlock.ammoType === 3) {
-            heavyKills += weapon.kills;
+        if (weapon.Response.hasOwnProperty('equippingBlock')) {
+            if (weapon.Response.equippingBlock.ammoType === 1) {
+                primaryKills += weapon.kills;
+            } else if (weapon.Response.equippingBlock.ammoType === 2) {
+                specialKills += weapon.kills;
+            } else if (weapon.Response.equippingBlock.ammoType === 3) {
+                heavyKills += weapon.kills;
+            }
+            itemTypeDisplayName.push(weapon.Response.itemTypeDisplayName);
+        } else {
+            overAllKd += weapon.Response[Object.keys(weapon.Response)[0]].allTime.killsDeathsRatio.basic.value;
+            overAllKda += weapon.Response[Object.keys(weapon.Response)[0]].allTime.killsDeathsAssists.basic.value;
         }
-        itemTypeDisplayName.push(weapon.Response.itemTypeDisplayName);
     });
 
     for (let i = 0; i < players.length; i++) {
@@ -159,6 +170,8 @@ async function makePieGraph(players, chart, title) {
             meleeKills += players[i].extended.values.weaponKillsMelee.basic.value;
             superKills += players[i].extended.values.weaponKillsSuper.basic.value;
             otherAbilities += players[i].extended.values.weaponKillsAbility.basic.value;
+            kd += players[i].values.killsDeathsRatio.basic.value;
+            kda += players[i].values.killsDeathsAssists.basic.value;
             if (players[i].values.completed.basic.value === 0) {
                 quit++;
             }
@@ -167,11 +180,21 @@ async function makePieGraph(players, chart, title) {
             }
         }
     }
+
     let p = document.createElement('p');
-    p.textContent = quit + " " + title + "did not finish";
+    let p2 = document.createElement('p');
+    let p3 = document.createElement('p');
+    let p4 = document.createElement('p');
+    p.textContent = quit + " " + title + " did not finish";
+    p2.textContent = title + " had " + (allKills / games).toFixed(2) + "Avg. kills per game";
+    p3.textContent = "  avg kd" + (kd / players.length).toFixed(2) + "  avg kda" + (kda / players.length).toFixed(2);
+    p4.textContent = "avg account kd " + (overAllKd / players.length).toFixed(2) + "  avg. acount kda " + (overAllKda / players.length).toFixed(2);
     let display = document.querySelector('#display');
     display.append(p);
-    let yValues = [primaryKills / allKills, specialKills / allKills, heavyKills / allKills, grenadeKills / allKills, meleeKills / allKills, superKills / allKills, otherAbilities / allKills]
+    display.append(p2);
+    display.append(p3);
+    display.append(p4);
+    let yValues = [primaryKills, specialKills, heavyKills, grenadeKills, meleeKills, superKills, otherAbilities]
 
     new Chart(chart, {
         type: "pie",
@@ -179,17 +202,62 @@ async function makePieGraph(players, chart, title) {
             labels: xValues,
             datasets: [{
                 backgroundColor: barColors,
-                data: yValues
+                data: yValues,
+                title: xValues,
+                borderColor: '#555555'
             }]
         },
         options: {
+            plugins: {
+                legend: {
+                    position: "chartArea",
+                    labels: {
+                        color: '#eceaea',
+                    } 
+                }
+            },
             title: {
                 display: true,
                 text: title,
-            }
+                color: '#eceaea'
+            },
+            tooltips: {
+                backgroundColor: '#aba5a5f3',
+                titleFontColor: '#eceaea',
+                bodyFontColor: '#eceaea',
+                bodySpacing: 4,
+                xPadding: 12,
+                mode: "nearest",
+                intersect: 0,
+                position: "nearest",
+                // callbacks: {
+                //     label: function(context) {
+                //         let label = xValues[context.datasetIndex] + " " + ((context.y/ allKills) * 100).toFixed(0) + "%";
+                //         return label; 
+                //     }
+                // }
+            },
         }
     });
 
+}
+function getKd(charId, memId, memTypes, mode) {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://www.bungie.net/Platform/Destiny2/" + memTypes + "/Account/" + memId + "/Character/" + charId + "/Stats/?modes=" + mode, true);
+        xhr.setRequestHeader("X-API-Key", apiKey);
+
+        xhr.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                let json = JSON.parse(this.responseText);
+                resolve(json);
+            } else if (this.readyState === 4) {
+                reject(this.status);
+            }
+
+        };
+        xhr.send();
+    });
 }
 //ammoType 1=primary 2=special 3=heavy 4=relic(maybe)
 function getItem(id, kills) {
@@ -203,7 +271,7 @@ function getItem(id, kills) {
                 let json = JSON.parse(this.responseText);
                 json.kills = kills;
                 resolve(json);
-            } else if(this.readyState === 4) {
+            } else if (this.readyState === 4) {
                 reject(this.status);
             }
 
@@ -221,7 +289,7 @@ function getPostGameReport(activityId) {
             if (this.readyState === 4 && this.status === 200) {
                 let json = JSON.parse(this.responseText);
                 resolve(json);
-            } else if(this.readyState === 4) {
+            } else if (this.readyState === 4) {
                 reject(this.status);
             }
 
@@ -239,7 +307,7 @@ function getUser() {
             if (this.readyState === 4 && this.status === 200) {
                 let json = JSON.parse(this.responseText);
                 resolve(json);
-            } else if(this.readyState === 4) {
+            } else if (this.readyState === 4) {
                 reject(this.status);
             }
 
@@ -256,7 +324,7 @@ function getUserProfile() {
             if (this.readyState === 4 && this.status === 200) {
                 let json = JSON.parse(this.responseText);
                 resolve(json);
-            } else if(this.readyState === 4) {
+            } else if (this.readyState === 4) {
                 reject(this.status)
             }
 
@@ -271,12 +339,12 @@ function getAccount() {
         xhr.open("GET", 'https://www.bungie.net/platform/Destiny2/' + membershipType + '/Account/' + memberShipId + '/Stats/', true);
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.onreadystatechange = function () {
-                if (this.readyState === 4 && this.status === 200) {
-                    let json = JSON.parse(this.responseText);
-                    resolve(json);
-                } else if(this.readyState === 4) {
-                    reject(this.status);
-                }
+            if (this.readyState === 4 && this.status === 200) {
+                let json = JSON.parse(this.responseText);
+                resolve(json);
+            } else if (this.readyState === 4) {
+                reject(this.status);
+            }
         };
         xhr.send();
     });
@@ -331,13 +399,12 @@ function getActivityHistory(mode, charId, page) {
         xhr.setRequestHeader("X-API-Key", apiKey);
         xhr.setRequestHeader("Authorization", "Bearer " + token);
         xhr.onreadystatechange = function () {
-                if (this.readyState === 4 && this.status === 200) {
-                    let json = JSON.parse(this.responseText);
-                    resolve(json);
-                } else if(this.readyState === 4) {
-                    reject(this.status);
-                    console.log("regected");
-                }
+            if (this.readyState === 4 && this.status === 200) {
+                let json = JSON.parse(this.responseText);
+                resolve(json);
+            } else if (this.readyState === 4) {
+                reject(this.status);
+            }
         };
         xhr.send();
     });
