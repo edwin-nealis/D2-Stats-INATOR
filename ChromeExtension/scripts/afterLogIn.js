@@ -10,6 +10,7 @@ var selectedId;
 var token = null;
 var session;
 var selectedMode;
+var charClass = new Array(3);
 window.onload = function () {
     let displayDiv = document.getElementById('display');
     chrome.storage.local.get(['token'], async function (item) {
@@ -31,17 +32,30 @@ window.onload = function () {
         await getAccount().then(json => {
             accountJson = json;
         });
+        let characterJson;
+        await getCharacter().then(json => {
+            characterJson = json;
+        });
+        console.log(characterJson);
         let chars = accountJson.Response.characters;
         if (chars.length === 1) {
             charId1 = chars[0].characterId;
+            charClass[0] = characterJson.Response.characters.data[charId1].classType;
         } else if (chars.length === 2) {
             charId1 = chars[0].characterId;
             charId2 = chars[1].characterId;
+            charClass[0] = characterJson.Response.characters.data[charId1].classType;
+            charClass[1] = characterJson.Response.characters.data[charId2].classType;
         } else if (chars.length === 3) {
             charId1 = chars[0].characterId;
             charId2 = chars[1].characterId;
             charId3 = chars[2].characterId;
+            charClass[0] = characterJson.Response.characters.data[charId1].classType;
+            charClass[1] = characterJson.Response.characters.data[charId2].classType;
+            charClass[2] = characterJson.Response.characters.data[charId3].classType;
         }
+        
+        
         //character id used in all calls
         selectedId = charId3;
         selectedMode = 5
@@ -105,6 +119,10 @@ window.onload = function () {
         p2.textContent = "Games in Session: " + session.length;
         let div = document.querySelector('#top');
         div.append(p2);
+        let buttonContainer = document.createElement('div');
+        buttonContainer.setAttribute("id","button-container");
+        div.append(buttonContainer);
+        createCharacterButtons(chars.length);
         makePieGraph(enemys, session.length, "enemysChart", "Enemys", selectedMode);
         makePieGraph(teamMates, session.length, "teamMatesChart", "teamMates", selectedMode);
         makePieGraph(player, session.length, "playerChart", "players", selectedMode);
@@ -409,4 +427,59 @@ function getActivityHistory(mode, charId, page) {
         xhr.send();
     });
 
+}
+
+function getCharacter() {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", 'https://www.bungie.net/platform/Destiny2/' + membershipType + '/Profile/' + memberShipId + '/?components=200', true);
+        xhr.setRequestHeader("X-API-Key", apiKey);
+        xhr.setRequestHeader("Authorization", "Bearer " + token);
+        xhr.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                let json = JSON.parse(this.responseText);
+                resolve(json);
+            } else if (this.readyState === 4) {
+                reject(this.status);
+            }
+        };
+        xhr.send();
+    });
+}
+
+
+function createCharacterButtons(characterNum) {
+    let buttonDiv = document.getElement
+    for (let i = 0; i < characterNum; i++) {
+        let button = document.createElement('button');
+        let className = "";
+        if (charClass[i] == 0) {
+            className = "Titan";
+        } else if (charClass[i] == 1) {
+            className = "Hunter";
+        } else if (charClass[i] == 2) {
+            className = "Warlock";
+        }
+        button.innerHTML = className; // Find Class Name
+        button.setAttribute("id","button-character" + i);
+        button.onclick = function(){toggleButtons(this)};
+        document.querySelector('#button-container').appendChild(button);
+
+    }
+}
+
+function toggleButtons(btn) {
+    document.querySelectorAll('[id^="button-character"]').forEach(btn => btn.disabled = false);
+    btn.disabled = true;
+    if (btn.id.slice(-1) == "0") {
+        selectedId = charId1;
+        console.log(charId1);
+    } else if (btn.id.slice(-1) == "1") {
+        selectedId = charId2;
+        console.log(charId2);
+    } else if (btn.id.slice(-1) == "2") {
+        selectedId = charId3;
+        console.log(charId3);
+    }
+    // TODO: Call reload with id 
 }
