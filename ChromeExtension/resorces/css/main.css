@@ -24,3 +24,11 @@
     justify-content: space-evenly;
     text-align: center;
  }
+ .graphs {
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: 33% 33% 33%;
+    justify-content: space-evenly;
+    max-height: 33%;
+    max-width: 100%;
+ }
