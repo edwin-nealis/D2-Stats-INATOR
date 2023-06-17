@@ -24,11 +24,10 @@
     justify-content: space-evenly;
     text-align: center;
  }
- .graphs {
+ .graph {
     display: grid;
-    grid-template-columns: 100%;
-    grid-template-rows: 33% 33% 33%;
     justify-content: space-evenly;
-    max-height: 33%;
+    grid-template-columns: 33% 33% 33%;
+    max-height: 600px;
     max-width: 100%;
  }

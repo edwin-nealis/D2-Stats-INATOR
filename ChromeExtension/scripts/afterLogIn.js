@@ -26,6 +26,7 @@ var enemys = [];
 var player = [];
 var games = [];
 var chars;
+var mercyCount;
 window.onload = function () {
     chrome.storage.local.get(['token'], async function (item) {
         token = JSON.parse(item['token']);
@@ -154,8 +155,14 @@ window.onload = function () {
 }
 async function getSessionStats(mode, charId) {
     let session;
+    let winCount = 0;
+    let loseCount = 0;
+    let tieCount = 0;
+    mercyCount = 0;
     let displayDiv = document.getElementById('session');
+    let statsDiv = document.getElementById('display');
     displayDiv.innerHTML = "";
+    statsDiv.innerHTML = "";
     if (char1Stats.charId === charId) {
         session = char1Stats[mode];
     } else if (char2Stats.charId === charId) {
@@ -167,6 +174,9 @@ async function getSessionStats(mode, charId) {
     games = new Array();
 
     for (let i = 0; i < session.length; i++) {
+        if (session[i].values.completionReason.basic.value === 4) {
+            mercyCount++;
+        }
         await getPostGameReport(session[i].activityDetails.instanceId).then(json => {
             games[i] = json;
         });
@@ -178,6 +188,7 @@ async function getSessionStats(mode, charId) {
     player = new Array();
 
     for (let i = 0; i < games.length; i++) {
+
         let team1 = new Array();
         let team2 = new Array();
         let team1Name = games[i].Response.teams[0].teamId;
@@ -185,6 +196,13 @@ async function getSessionStats(mode, charId) {
         for (let ii = 0; ii < games[i].Response.entries.length; ii++) {
             if (games[i].Response.entries[ii].values.team.basic.value === team1Name) {
                 if (games[i].Response.entries[ii].characterId === charId) {
+                    if (games[i].Response.entries[ii].standing === 0) {
+                        winCount++;
+                    } else if (games[i].Response.entries[ii].standing === 1) {
+                        loseCount++;
+                    } else {
+                        tieCount++;
+                    }
                     player.push(games[i].Response.entries[ii]);
                     isPlayerTeam1 = true;
                 } else {
@@ -192,6 +210,13 @@ async function getSessionStats(mode, charId) {
                 }
             } else {
                 if (games[i].Response.entries[ii].characterId === charId) {
+                    if (games[i].Response.entries[ii].standing === 0) {
+                        winCount++;
+                    } else if (games[i].Response.entries[ii].standing === 1) {
+                        loseCount++;
+                    } else {
+                        tieCount++;
+                    }
                     player.push(games[i].Response.entries[ii]);
                     isPlayerTeam1 = false;
                 } else {
@@ -219,7 +244,7 @@ async function getSessionStats(mode, charId) {
 
     }
     let p2 = document.createElement('p');
-    p2.textContent = "Games in Session: " + session.length;
+    p2.textContent = "Games in Session: " + session.length + "num mercys: " + mercyCount + " wins: " + winCount + " loses: " + loseCount + " ties: " + tieCount;
     displayDiv.append(p2);
     makePieGraph(enemys, session.length, "enemysChart", "Enemys", mode);
     makePieGraph(teamMates, session.length, "teamMatesChart", "teamMates", mode);
@@ -331,7 +356,6 @@ async function makePieGraph(players, games, chart, title, mode) {
         options: {
             plugins: {
                 legend: {
-                    position: "left",
                     labels: {
                         color: '#eceaea',
                     }
