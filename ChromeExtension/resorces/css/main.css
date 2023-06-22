@@ -1,33 +1,43 @@
 /*Variables*/
 :root {
-    --black: #242424f7;
-    --white: #eceaea;
-    --blue: #1d0857;
-    --darkGray: #141517;
+   --black: #242424f7;
+   --white: #eceaea;
+   --blue: #1d0857;
+   --darkGray: #141517;
 }
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background-color: #242424f7;
-    color: #eceaea;
-    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-}
- .noDisplay {
-    display: none;
- }
 
- .stats {
-    display: grid;
-    grid-template-rows: 33% 33% 33%;
-    grid-template-columns: 25% 25% 25% 25%;
-    justify-content: space-evenly;
-    text-align: center;
- }
- .graph {
-    display: grid;
-    justify-content: space-evenly;
-    grid-template-columns: 33% 33% 33%;
-    max-height: 600px;
-    max-width: 100%;
- }
+* {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+   background-color: #242424f7;
+   color: #eceaea;
+   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+.noDisplay {
+   display: none;
+}
+
+.stats {
+   display: grid;
+   grid-template-rows: 33% 33% 33%;
+   grid-template-columns: 25% 25% 25% 25%;
+   justify-content: space-evenly;
+   text-align: center;
+}
+
+.graph {
+   display: grid;
+   justify-content: space-evenly;
+   grid-template-columns: 33% 33% 33%;
+   max-height: 600px;
+   max-width: 100%;
+}
+/* importnat so that it overides the chart.js
+ sizing and fills the entire grid space its contained in
+*/
+.chart {
+   height: 100% !important;
+   width: 100% !important;
+}

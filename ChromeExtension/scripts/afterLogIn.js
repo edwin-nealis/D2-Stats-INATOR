@@ -10,17 +10,31 @@ var charId1 = null;
 var charId2 = null;
 var charId3 = null;
 var token = null;
+/** mode id for iorn banner @type {int} */
 const IORNBANNER = 19;
+/** mode id for trials of osiris @type {int} */
 const TRIALS = 84;
+/** mode id for the competive game mode @type {int} */
 const COMP = 69;
+/** mode id for contorol @type {int} */
 const CONTROL = 10;
-
 var selectedId;
 var selectedMode = CONTROL;
 var charClass = new Array(3);
-var char1Stats = {};
-var char2Stats = {};
-var char3Stats = {};
+/** Charcter stat object
+ *  @typedef {Object} StatsObj
+ *  @property {int} charId 
+ *  @property {array[Object]} IORNBANNER - iron baner stats
+ *  @property {array[Object]} TRIALS - trails stats
+ *  @property {array[Object]} COMP - comp stats
+ *  @property {array[Object]} CONTROL - control stats
+ */
+/** @type {StatsObj} */
+const char1Stats = {};
+/** @type {StatsObj} */
+const char2Stats = {};
+/** @type {StatsObj} */
+const char3Stats = {};
 var teamMates = [];
 var enemys = [];
 var player = [];
@@ -149,10 +163,16 @@ window.onload = function () {
         let div = document.querySelector('#top');
         div.append(buttonContainer);
         createCharacterButtons(chars.length);
+        createModeButtons();
         getSessionStats(selectedMode, selectedId);
 
     });
 }
+/**
+ * gets stats for the current session and displys to screen 
+ * @param {int} mode
+ * @param {int} charId
+ */
 async function getSessionStats(mode, charId) {
     let session;
     let winCount = 0;
@@ -268,16 +288,14 @@ async function makePieGraph(players, games, chart, title, mode) {
     let itemTypeDisplayName = [];
     let promises = [];
     let quit = 0;
-    let canvas = document.getElementById(chart);
-    let context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
     var barColors = [
-        "#b91d47",
-        "#00aba9",
-        "#2b5797",
-        "#e8c3b9",
-        "#000000",
-        "#973273"
+        "#E2E2E2",
+        "#5C7A41",
+        "#B63ABC",
+        "#F7F600",
+        "#58C8F2",
+        "#ED9CBF",
+        "#000000"
     ]
     for (let i = 0; i < players.length; i++) {
         if (players[i].extended.hasOwnProperty('weapons')) {
@@ -341,50 +359,50 @@ async function makePieGraph(players, games, chart, title, mode) {
         console.log(oldChart);
         oldChart.data.datasets[0].data = yValues;
         oldChart.update();
-       } else {
-    new Chart(chart, {
-        type: "pie",
-        data: {
-            labels: xValues,
-            datasets: [{
-                backgroundColor: barColors,
-                data: yValues,
-                title: xValues,
-                borderColor: '#555555'
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#eceaea',
+    } else {
+        new Chart(chart, {
+            type: "pie",
+            data: {
+                labels: xValues,
+                datasets: [{
+                    backgroundColor: barColors,
+                    data: yValues,
+                    title: xValues,
+                    borderColor: '#555555'
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#eceaea',
+                        }
                     }
-                }
-            },
-            title: {
-                display: true,
-                text: title,
-                color: '#eceaea'
-            },
-            tooltips: {
-                backgroundColor: '#aba5a5f3',
-                titleFontColor: '#eceaea',
-                bodyFontColor: '#eceaea',
-                bodySpacing: 4,
-                xPadding: 12,
-                mode: "nearest",
-                intersect: 0,
-                position: "nearest",
-                // callbacks: {
-                //     label: function(context) {
-                //         let label = xValues[context.datasetIndex] + " " + ((context.y/ allKills) * 100).toFixed(0) + "%";
-                //         return label; 
-                //     }
-                // }
-            },
-        }
-    });
-}
+                },
+                title: {
+                    display: true,
+                    text: title,
+                    color: '#eceaea'
+                },
+                tooltips: {
+                    backgroundColor: '#aba5a5f3',
+                    titleFontColor: '#eceaea',
+                    bodyFontColor: '#eceaea',
+                    bodySpacing: 4,
+                    xPadding: 12,
+                    mode: "nearest",
+                    intersect: 0,
+                    position: "nearest",
+                    // callbacks: {
+                    //     label: function(context) {
+                    //         let label = xValues[context.datasetIndex] + " " + ((context.y/ allKills) * 100).toFixed(0) + "%";
+                    //         return label; 
+                    //     }
+                    // }
+                },
+            }
+        });
+    }
 
 }
 function getKd(charId, memId, memTypes, mode) {
@@ -583,7 +601,6 @@ function getCharacter() {
 
 
 function createCharacterButtons(characterNum) {
-    let buttonDiv = document.getElement
     for (let i = 0; i < characterNum; i++) {
         let button = document.createElement('button');
         let className = "";
@@ -600,6 +617,11 @@ function createCharacterButtons(characterNum) {
         document.querySelector('#button-container').appendChild(button);
 
     }
+    let refresh = document.createElement('button');
+    refresh.innerHTML = "refresh";
+    refresh.onclick = function () { reload() };
+    document.querySelector('#button-container').appendChild(refresh);
+
 }
 
 function toggleButtons(btn) {
@@ -618,6 +640,63 @@ function toggleButtons(btn) {
     getSessionStats(selectedMode, selectedId);
 }
 
-function reload() {
+function createModeButtons() {
+    for (let i = 0; i < 4; i++) {
+        let button = document.createElement('button');
+        let mode;
+        if (i === 0) {
+            mode = 'Trials';
+        } else if(i === 1) {
+            mode = 'Comp';
+        } else if (i === 2) {
+            mode = 'Iorn Banner';
+        } else {
+            mode = 'Control';
+        }
+        button.innerHTML = mode; 
+        button.setAttribute("id", mode);
+        button.onclick = function () { toggleModeButtons(this) };
+        document.querySelector('#button-container').appendChild(button);
 
+    }
+
+}
+
+function toggleModeButtons(btn) {
+    document.querySelectorAll('[id^="button-character"]').forEach(btn => btn.disabled = false);
+    btn.disabled = true;
+    if (btn.id === 'Trials') {
+        selectedMode = IORNBANNER;
+    } else if (btn.id === 'Comp') {
+        selectedMode = COMP;
+    } else if (btn.id === 'Iorn Banner') {
+        selectedMode = IORNBANNER
+    } else if (btn.id === 'Control') {
+        selectedMode = CONTROL
+    }
+    getSessionStats(selectedMode, selectedId);
+}
+//this method does not check the session time cut offs it is a fast reload use case is for when app is onpen while playing and have just finished a match
+async function reload() {
+    await getActivityHistory(selectedMode, selectedId, 0).then(json => {
+        console.log(json);
+        /**@type {array} */
+        let charStats;
+        if (selectedId === char1Stats.charId) {
+            charStats = char1Stats[selectedMode];
+        } else if (selectedId === char2Stats.charId) {
+            charStats = char2Stats[selectedMode];
+        } else {
+            charStats = char3Stats[selectedMode];
+        }
+        let activites = json.Response.activites;
+        let i = 0;
+        while(!charStats.includes(activites[i])) {
+            charStats.unshift(activites[i]);
+            i++;
+        }
+        if (i > 0) {
+            getSessionStats(selectedMode, selectedId);
+        }
+    });
 }
