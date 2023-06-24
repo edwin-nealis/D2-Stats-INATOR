@@ -12,7 +12,6 @@ function displayHome(home) {
 function clear() {
     document.getElementById("display").innerHTML = "";
 }
-
 // document.getElementById("logIn").addEventListener('click', function() {
 //     chrome.identity.getAuthToken({interactive: true}, function(token) {
 //         let init = {

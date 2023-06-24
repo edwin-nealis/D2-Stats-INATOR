@@ -41,6 +41,7 @@ var player = [];
 var games = [];
 var chars;
 var mercyCount;
+var itemManifest;
 window.onload = function () {
     chrome.storage.local.get(['token'], async function (item) {
         token = JSON.parse(item['token']);
@@ -54,6 +55,7 @@ window.onload = function () {
         await getUserProfile().then(json => {
             profileJson = json;
         });
+        console.log(profileJson)
         membershipType = profileJson.Response.destinyMemberships[0].LastSeenDisplayNameType;
         memberShipId = profileJson.Response.primaryMembershipId;
         let accountJson;
@@ -64,7 +66,9 @@ window.onload = function () {
         await getCharacter().then(json => {
             characterJson = json;
         });
+        console.log(accountJson);
         console.log(characterJson);
+        getManifest();
         chars = accountJson.Response.characters;
         if (chars.length === 1) {
             charId1 = chars[0].characterId;
@@ -192,7 +196,6 @@ async function getSessionStats(mode, charId) {
     }
     console.log(session);
     games = new Array();
-
     for (let i = 0; i < session.length; i++) {
         if (session[i].values.completionReason.basic.value === 4) {
             mercyCount++;
@@ -301,22 +304,31 @@ async function makePieGraph(players, games, chart, title, mode) {
         if (players[i].extended.hasOwnProperty('weapons')) {
             promises.push(getKd(players[i].characterId, players[i].player.destinyUserInfo.membershipId, players[i].player.destinyUserInfo.membershipType, mode));
             for (let j = 0; j < players[i].extended.weapons.length; j++) {
-                promises.push(getItem(players[i].extended.weapons[j].referenceId, players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value));
+                //promises.push(getItem(players[i].extended.weapons[j].referenceId, players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value));
+                let itemAmmoType = itemManifest[players[i].extended.weapons[j].referenceId].equippingBlock.ammoType;
+                let weaponKills = players[i].extended.weapons[j].values.uniqueWeaponKills.basic.value;
+                if (itemAmmoType === 1) {
+                    primaryKills += weaponKills;
+                } else if (itemAmmoType === 2) {
+                    specialKills += weaponKills;
+                } else if (itemAmmoType === 3) {
+                    heavyKills += weaponKills;
+                }
             }
         }
     }
     let data = await Promise.all(promises);
     data.forEach(weapon => {
         if (weapon.Response.hasOwnProperty('equippingBlock')) {
-            if (weapon.Response.equippingBlock.ammoType === 1) {
-                primaryKills += weapon.kills;
-            } else if (weapon.Response.equippingBlock.ammoType === 2) {
-                specialKills += weapon.kills;
-            } else if (weapon.Response.equippingBlock.ammoType === 3) {
-                heavyKills += weapon.kills;
-            }
-            itemTypeDisplayName.push(weapon.Response.itemTypeDisplayName);
-        } else {
+            // if (weapon.Response.equippingBlock.ammoType === 1) {
+            //     primaryKills += weapon.kills;
+            // } else if (weapon.Response.equippingBlock.ammoType === 2) {
+            //     specialKills += weapon.kills;
+            // } else if (weapon.Response.equippingBlock.ammoType === 3) {
+            //     heavyKills += weapon.kills;
+            // }
+            // itemTypeDisplayName.push(weapon.Response.itemTypeDisplayName);
+        } else if (weapon.Response[Object.keys(weapon.Response)[0]].hasOwnProperty('allTime')){
             overAllKd += weapon.Response[Object.keys(weapon.Response)[0]].allTime.killsDeathsRatio.basic.value;
             overAllKda += weapon.Response[Object.keys(weapon.Response)[0]].allTime.killsDeathsAssists.basic.value;
         }
@@ -405,6 +417,31 @@ async function makePieGraph(players, games, chart, title, mode) {
     }
 
 }
+
+function getManifest() {
+    let xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://www.bungie.net/Platform/Destiny2/Manifest", true);
+        xhr.setRequestHeader("X-API-Key", apiKey);
+
+        xhr.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                let json = JSON.parse(this.responseText);
+                let xhr2 = new XMLHttpRequest();
+                xhr2.open("GET", "https://www.bungie.net" + json.Response.jsonWorldComponentContentPaths.en.DestinyInventoryItemLiteDefinition);
+                xhr2.setRequestHeader("X-API-Key", apiKey);
+                xhr2.onreadystatechange = function () {
+                    if (this.readyState === 4 && this.status === 200) {
+                        let json = JSON.parse(this.responseText);
+                        itemManifest = json;
+                    }
+                };
+                xhr2.send()
+            } 
+
+        };
+        xhr.send();
+}
+
 function getKd(charId, memId, memTypes, mode) {
     return new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
@@ -646,15 +683,16 @@ function createModeButtons() {
         let mode;
         if (i === 0) {
             mode = 'Trials';
-        } else if(i === 1) {
+        } else if (i === 1) {
             mode = 'Comp';
         } else if (i === 2) {
             mode = 'Iorn Banner';
         } else {
             mode = 'Control';
         }
-        button.innerHTML = mode; 
+        button.innerHTML = mode;
         button.setAttribute("id", mode);
+        button.classList.add('modeBtn');
         button.onclick = function () { toggleModeButtons(this) };
         document.querySelector('#button-container').appendChild(button);
 
@@ -663,10 +701,10 @@ function createModeButtons() {
 }
 
 function toggleModeButtons(btn) {
-    document.querySelectorAll('[id^="button-character"]').forEach(btn => btn.disabled = false);
+    document.querySelectorAll('.modeBtn').forEach(btn => btn.disabled = false);
     btn.disabled = true;
     if (btn.id === 'Trials') {
-        selectedMode = IORNBANNER;
+        selectedMode = TRIALS;
     } else if (btn.id === 'Comp') {
         selectedMode = COMP;
     } else if (btn.id === 'Iorn Banner') {
@@ -686,15 +724,19 @@ async function reload() {
             charStats = char1Stats[selectedMode];
         } else if (selectedId === char2Stats.charId) {
             charStats = char2Stats[selectedMode];
-        } else {
+        } else if (selectedId === char3Stats.charId) {
             charStats = char3Stats[selectedMode];
         }
-        let activites = json.Response.activites;
+        let activites = json.Response.activities;
         let i = 0;
-        while(!charStats.includes(activites[i])) {
-            charStats.unshift(activites[i]);
-            i++;
+        if (activites.length !== 0) {
+            while (i < 3 && !charStats.includes(activites[i])) {
+                charStats.push(activites[i]);
+                i++;
+            }
         }
+        console.log(activites);
+        console.log(charStats);
         if (i > 0) {
             getSessionStats(selectedMode, selectedId);
         }
