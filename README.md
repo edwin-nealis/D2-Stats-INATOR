@@ -1,2 +1,3 @@
 # D2-Stats-INATOR
-The Tri State Area will finally be conguered by this inforamtion
+This is a personal project that I started after graduation with a little help from my freind Udayan Senapati it is a google chrome extension that displays stats for a popular video game called destiny2.
+This extension makes heavy use of the API provided by Bungie the creators of destiny 2 to get the information it displays. It uses OAuth 2.0 to request infromation from a user account that has been created with bungie. The goal of the app is to provide stats for the player veruse player modes in Destiny 2 that can not be easily found elsewhere with a focous on statistics which could be infomative for a player trying to improve at said game modes. 
