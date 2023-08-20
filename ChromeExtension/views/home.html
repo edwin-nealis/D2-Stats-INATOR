@@ -11,12 +11,22 @@
             <input type="text" name="bngId" id="bngId" value="rawr_XD (TIMELOST)" required>
             <button type="submit" name="submit" id="submit" value="Load">Load</button>
         </div>
-        <div id="display"></div>
         <button type="submit" name="logIn" id="logIn" value="">Log In</button>
         <div id="load" class="noDisplay">Please wait loading data</div>
-
+        
+        <div id="top"></div>
+        <div id="session"></div>
+        <div class="stats" id="display"></div>
+        <div class="graph" id="graphs">
+              <canvas class="chart" id="playerChart"></canvas>
+              <canvas class="chart" id="teamMatesChart"></canvas>
+  
+              <canvas class="chart" id="enemysChart" ></canvas>
+        </div>
 
   </body>
-  <script src="../scripts/home.js"></script>
+  <script src="../scripts/Chart.js"></script>
+  <script src="../scripts/search.js"></script>
+  <script src="../scripts/getSessionStats.js"></script>
 
 </html>
